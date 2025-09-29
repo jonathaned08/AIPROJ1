@@ -1,22 +1,27 @@
-# Use the official Jenkins LTS image as base
-FROM jenkins/jenkins:lts
+# Use official Python base image
+FROM python:3.10-slim
 
-# Switch to root to install extra packages
-USER root
+# Set working directory inside container
+WORKDIR /app
 
-# Install dependencies (git, ssh, etc.)
-RUN apt-get update && apt-get install -y \
-    git \
-    openssh-client \
-    && rm -rf /var/lib/apt/lists/*
+# Copy requirements.txt first (for caching dependencies)
+COPY requirements.txt .
 
-# Set Jenkins to run with Jenkins user
-USER jenkins
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose Jenkins port
-EXPOSE 8080
+# Copy the rest of the project files
+COPY . .
 
-# Expose agent port (optional, for Jenkins agents)
-EXPOSE 50000
+# Expose Streamlit's default port
+EXPOSE 8501
 
-# Default Jenkins entrypoint (already included)
+# Streamlit needs this to run properly inside Docker
+ENV PYTHONUNBUFFERED=1 \
+    STREAMLIT_PREFER_ENV=true \
+    STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_SERVER_PORT=8501 \
+    STREAMLIT_SERVER_ENABLECORS=false
+
+# Run Streamlit app
+CMD ["streamlit", "run", "app.py"]
