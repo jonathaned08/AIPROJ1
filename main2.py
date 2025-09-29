@@ -26,6 +26,9 @@ if not COHERE_API_KEY:
 # Load Cohere client
 co = cohere.Client(COHERE_API_KEY)
 
+# Default Cohere model (updated)
+DEFAULT_MODEL = "command-a-03-2025"
+
 # Load BLIP image captioning model
 @st.cache_resource
 def load_blip():
@@ -72,13 +75,13 @@ if image_file:
     with st.spinner("✨ Enhancing caption..."):
         try:
             prompt = f"Improve this image caption to be more descriptive and vivid: '{caption}'"
-            enhanced = co.chat(model="command-r-plus", message=prompt)
+            enhanced = co.chat(model=DEFAULT_MODEL, message=prompt)
             enhanced_caption = enhanced.text.strip()
             caption = enhanced_caption
             st.success("Enhanced caption:")
             st.markdown(f"> _{caption}_")
         except Exception as e:
-            st.warning(f"Failed to enhance caption: {e}")
+            st.warning(f"Failed to enhance caption (model may be deprecated): {e}")
 
     # Object detection
     with st.spinner("🔍 Detecting objects..."):
@@ -117,12 +120,12 @@ if user_prompt:
     try:
         with st.spinner("🤖 Thinking..."):
             response = co.chat(
-                model="command-r-plus",
+                model=DEFAULT_MODEL,
                 message=combined_prompt,
                 temperature=0.7,
                 max_tokens=1024,
                 chat_history=[
-                    {"role": "User" if m["role"] == "user" else "Chatbot", "message": m["content"]}
+                    {"role": "USER" if m["role"] == "user" else "CHATBOT", "message": m["content"]}
                     for m in st.session_state.messages[:-1]
                 ]
             )
@@ -130,4 +133,6 @@ if user_prompt:
             st.chat_message("assistant").markdown(reply)
             st.session_state.messages.append({"role": "assistant", "content": reply})
     except Exception as e:
-        st.chat_message("assistant").error(f"⚠️ Error: {e}")
+        st.chat_message("assistant").error(
+            f"⚠️ Error calling model {DEFAULT_MODEL}. It may have been removed. Please check https://docs.cohere.com/docs/models#command for updated model names.\n\n{e}"
+        )
