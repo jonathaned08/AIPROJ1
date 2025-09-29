@@ -24,4 +24,4 @@ ENV PYTHONUNBUFFERED=1 \
     STREAMLIT_SERVER_ENABLECORS=false
 
 # Run Streamlit app
-CMD ["streamlit", "run", "app.py"]
+CMD ["streamlit", "run", "main2.py"]
